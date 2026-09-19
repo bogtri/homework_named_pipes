@@ -4,31 +4,71 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdbool.h>
 
-int main() {
+static bool process_cmd(char *cmd)
+{
+    bool stop = false;
+
+    if (strcmp(cmd, "PING") == 0)
+    {
+        printf("[SERVER] PONG\n");
+    }
+    else if (strcmp(cmd, "STOP") == 0)
+    {
+        stop = true;
+    }
+    else
+    {
+        printf("[SERVER] Unsupported command\n");
+    }
+
+    return stop;
+}
+
+int main()
+{
     const char *path = "/tmp/telemetry.fifo";
-    if (mkfifo(path, 0666) == -1) {
+    int fd;
+    char cmd[10];
+    bool stop = false;
+
+    if (mkfifo(path, 0666) == -1)
+    {
         printf("Cannot open a pipe\n");
         return 1;
     }
+
     printf("[SERVER] Listening on %s...\n", path);
-    int fd;
-    char s[10];
+
     while (1)
     {
         fd = open(path, O_RDONLY);
-        read(fd, s, sizeof(s));
-        if (strcmp(s, "PING") == 0) {
-            printf("[SERVER] PONG\n");
-        } else if (strcmp(s, "STOP") == 0) {
+
+        if (fd == -1)
+        {
+            printf("Cannot open a pipe\n");
+            return 1;
+        }
+
+        if (read(fd, cmd, sizeof(cmd)) == -1)
+        {
+            printf("[SERVER] Error reading data from pipe\n");
+        }
+        else
+        {
+            stop = process_cmd(cmd);
+        }
+
+        close(fd);
+
+        if (stop)
+        {
             printf("[SERVER] Stopping...\n");
-            close(fd);
             unlink(path);
             return 0;
-        } else {
-            printf("[SERVER] Unsupported command\n");
-        }       
-        close(fd);
+        }
     }
+
     return 0;
 }
