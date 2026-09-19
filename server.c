@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-static bool process_cmd(char *cmd)
+static bool process_cmd(const char *cmd)
 {
     bool stop = false;
 
