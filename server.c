@@ -16,6 +16,7 @@ static bool process_cmd(const char *cmd)
     }
     else if (strcmp(cmd, "STOP") == 0)
     {
+        printf("[SERVER] Stopping...\n");
         stop = true;
     }
     else
@@ -48,6 +49,7 @@ int main()
         if (fd == -1)
         {
             printf("Cannot open a pipe\n");
+            unlink(path);
             return 1;
         }
 
@@ -63,8 +65,7 @@ int main()
         close(fd);
 
         if (stop)
-        {
-            printf("[SERVER] Stopping...\n");
+        {     
             unlink(path);
             return 0;
         }
